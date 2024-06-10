@@ -9,11 +9,12 @@ public class TCPServer {
     public static void main(String[] args) {
         try {
             ServerSocket server = new ServerSocket(PORT);
-            while(true) {
+            System.out.println("Servidor esperando conexiones...");
+            while (true) {
                 Socket socket = server.accept();
+                new Thread(new Tarea(socket)).start();
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

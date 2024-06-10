@@ -8,6 +8,7 @@ import java.util.List;
 public class Tarea implements Runnable {
 
     private Socket socket;
+    private static List<RecursoCompartido> listaNumeros = new ArrayList<>();
 
     public Tarea(Socket socket) {
         this.socket = socket;
@@ -19,23 +20,34 @@ public class Tarea implements Runnable {
             ObjectInputStream in = new ObjectInputStream(this.socket.getInputStream());
             ObjectOutputStream out = new ObjectOutputStream(this.socket.getOutputStream());
 
-            String data = (String) in.readObject();
-            System.out.println( "Cliente dice: " + data );
+            while (true) {
+                String data = (String) in.readObject();
+                System.out.println("Cliente dice: " + data);
 
-            //Se envia la lista desde el servidor al cliente
-            List<RecursoCompartido> lista = new ArrayList<RecursoCompartido>();
-            // lista.add( new RecursoCompartido("Hola") );
-            // lista.add( new RecursoCompartido("mundo") );
-            // lista.add( new RecursoCompartido("Hola") );
-            // lista.add( new RecursoCompartido("mundo") );
+                if (data.startsWith("ADD")) {
+                    String[] parts = data.split(" ");
+                    for (int i = 1; i < parts.length; i++) {
+                        listaNumeros.add(new RecursoCompartido(Integer.parseInt(parts[i])));
+                    }
+                    out.writeObject("Números añadidos correctamente.");
+                } else if (data.equals("GET")) {
+                    out.writeObject(new ArrayList<>(listaNumeros));
+                } else if (data.equals("EXIT")) {
+                    out.writeObject("Conexión cerrada.");
+                    break;
+                }
+            }
 
-            out.writeObject(lista);
-            System.out.println("Lista enviada al cliente.");
-        } catch (ClassNotFoundException e) {
+            System.out.println("Lista enviada al cliente: " + listaNumeros);
+
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } finally {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-    }   
+    }
 }
